@@ -4,6 +4,8 @@ const io = std.io;
 const glue = @import("glue");
 const RocStr = glue.str.RocStr;
 
+var file: std.fs.File = undefined;
+
 comptime {
     if (builtin.target.cpu.arch != .wasm32) {
         @compileError("This platform is for WebAssembly only. You need to pass `--target wasm32` to the Roc compiler.");
@@ -33,7 +35,10 @@ export fn roc_dealloc(c_ptr: *anyopaque, alignment: u32) callconv(.C) void {
     free(@as([*]align(Align) u8, @alignCast(@ptrCast(c_ptr))));
 }
 
-// NOTE roc_panic has to be provided by the wasm runtime, so it can throw an exception
+export fn roc_panic(msg: *RocStr, tag_id: u32) callconv(.C) void {
+    _ = tag_id;
+    @panic(msg.asSlice());
+}
 
 extern fn roc__mainForHost_1_exposed_generic([*]u8) void;
 extern fn roc__mainForHost_0_result_size() i64;
@@ -76,3 +81,40 @@ export fn roc_fx_stdoutLine(str: *RocStr) void {
     const stdout = io.getStdOut().writer();
     stdout.print("{s}\n", .{str.*.asSlice()}) catch unreachable;
 }
+
+export fn roc_fx_fileOpen(str: *RocStr) RocResult(u64, u8) {
+    if (std.fs.openFileAbsolute(str.*.asSlice(), .{})) |fd| {
+
+        // TODO lets not store in this one global variable...
+        file = fd;
+
+        return .{
+            .payload = .{ .ok = 1234 },
+            .tag = .RocOk,
+        };
+    } else |_| {
+        return .{
+            .payload = .{ .err = 1 },
+            .tag = .RocErr,
+        };
+    }
+}
+
+pub fn RocResult(comptime T: type, comptime E: type) type {
+    return extern struct {
+        payload: RocResultPayload(T, E),
+        tag: RocResultTag,
+    };
+}
+
+pub fn RocResultPayload(comptime T: type, comptime E: type) type {
+    return extern union {
+        ok: T,
+        err: E,
+    };
+}
+
+const RocResultTag = enum(u8) {
+    RocErr = 0,
+    RocOk = 1,
+};
