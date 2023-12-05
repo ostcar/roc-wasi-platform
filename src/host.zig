@@ -33,7 +33,10 @@ export fn roc_dealloc(c_ptr: *anyopaque, alignment: u32) callconv(.C) void {
     free(@as([*]align(Align) u8, @alignCast(@ptrCast(c_ptr))));
 }
 
-// NOTE roc_panic has to be provided by the wasm runtime, so it can throw an exception
+export fn roc_panic(msg: *RocStr, tag_id: u32) callconv(.C) void {
+    _ = tag_id;
+    @panic(msg.asSlice());
+}
 
 extern fn roc__mainForHost_1_exposed_generic([*]u8) void;
 extern fn roc__mainForHost_0_result_size() i64;
