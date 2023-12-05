@@ -6,9 +6,11 @@ hosted Effect
         always,
         forever,
         loop,
-        stdoutLine
+        stdoutLine,
+        fileOpen,
     ]
     imports []
     generates Effect with [after, map, always, forever, loop]
 
 stdoutLine : Str -> Effect {}
+fileOpen : Str -> Effect (Result U64 U8)

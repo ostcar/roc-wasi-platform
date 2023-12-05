@@ -11,6 +11,7 @@ interface Task
         attempt,
         map,
         fromResult,
+        fromEffect,
     ]
     imports [
         Effect.{ Effect },

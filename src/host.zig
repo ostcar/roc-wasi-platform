@@ -4,6 +4,8 @@ const io = std.io;
 const glue = @import("glue");
 const RocStr = glue.str.RocStr;
 
+var file: std.fs.File = undefined;
+
 comptime {
     if (builtin.target.cpu.arch != .wasm32) {
         @compileError("This platform is for WebAssembly only. You need to pass `--target wasm32` to the Roc compiler.");
@@ -79,3 +81,40 @@ export fn roc_fx_stdoutLine(str: *RocStr) void {
     const stdout = io.getStdOut().writer();
     stdout.print("{s}\n", .{str.*.asSlice()}) catch unreachable;
 }
+
+export fn roc_fx_fileOpen(str: *RocStr) RocResult(u64, u8) {
+    if (std.fs.openFileAbsolute(str.*.asSlice(), .{})) |fd| {
+
+        // TODO lets not store in this one global variable...
+        file = fd;
+
+        return .{
+            .payload = .{ .ok = 1234 },
+            .tag = .RocOk,
+        };
+    } else |_| {
+        return .{
+            .payload = .{ .err = 1 },
+            .tag = .RocErr,
+        };
+    }
+}
+
+pub fn RocResult(comptime T: type, comptime E: type) type {
+    return extern struct {
+        payload: RocResultPayload(T, E),
+        tag: RocResultTag,
+    };
+}
+
+pub fn RocResultPayload(comptime T: type, comptime E: type) type {
+    return extern union {
+        ok: T,
+        err: E,
+    };
+}
+
+const RocResultTag = enum(u8) {
+    RocErr = 0,
+    RocOk = 1,
+};
