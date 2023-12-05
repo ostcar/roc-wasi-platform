@@ -9,7 +9,4 @@ app "helloworld"
 
 main : Task {} I32
 main = 
-
-    crash "Roc crashed here.\n"
-    
-    # Task.writeLine "hello world"
+    Task.writeLine "hello world"

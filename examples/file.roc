@@ -14,5 +14,5 @@ main =
     result <- File.open "crash.roc" |> Task.attempt
 
     when result is 
-        Ok _ -> Task.writeLine "SUCCESS opened file, opened crash.roc"
+        Ok _ -> Task.writeLine "SUCCESS opened crash.roc"
         Err UnableToOpenFile -> Task.writeLine "ERROR unable to file"

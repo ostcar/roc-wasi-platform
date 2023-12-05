@@ -19,7 +19,7 @@ $ roc build --target=wasm32 examples/file.roc
     examples/file.wasm
 
 $ wasmtime --dir=examples/ examples/file.wasm
-SUCCESS opened file, opened crash.roc
+SUCCESS opened crash.roc
 
 $ wasmtime --dir=. examples/file.wasm
 ERROR unable to file
